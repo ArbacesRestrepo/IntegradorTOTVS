@@ -2,6 +2,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"type": "java",
+			"name": "IntegradorTotvsApplication",
+			"request": "launch",
+			"mainClass": "com.main.IntegradorTOTVS.IntegradorTotvsApplication",
+			"projectName": "IntegradorTOTVS"
+		},
+		{
 			"type": "totvs_language_debug",
 			"request": "launch",
 			"name": "Depuración de lenguaje TOTVS",

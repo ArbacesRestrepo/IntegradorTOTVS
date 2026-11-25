@@ -1,0 +1,34 @@
+@echo off
+SETLOCAL EnableDelayedExpansion
+title Servicio Receptor UHF - Control de Arranque
+
+set JAR_NAME=mi-proyecto-jpa.jar
+set CONFIG_FILE=config\application.properties
+
+echo ==========================================
+echo       Iniciando Servicio Receptor UHF
+echo ==========================================
+
+:: 1. VALIDACIÓN FAIL-FAST: Verificar si existe el archivo externo
+if not exist "%CONFIG_FILE%" (
+    color 0C
+    echo 0X ERROR CRITICO: No se encontro el archivo %CONFIG_FILE%
+    echo El servidor requiere las variables de entorno externas para iniciar.
+    echo.
+    pause
+    exit /b 1
+)
+
+color 0A
+echo [OK] Archivo de configuracion detectado correctamente.
+color 0F
+
+:: 2. EJECUCIÓN DEL PROCESO
+echo 🚀 Lanzando aplicacion Spring Boot...
+echo.
+
+:: Abre la aplicación en una ventana de consola dedicada
+start "Spring Boot UHF Server" java -jar %JAR_NAME%
+
+echo 🎉 Proceso enviado al sistema de ejecucion.
+timeout /t 3 >nul

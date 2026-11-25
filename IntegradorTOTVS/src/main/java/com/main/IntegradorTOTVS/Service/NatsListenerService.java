@@ -1,6 +1,7 @@
 package com.main.IntegradorTOTVS.Service;
 
 import com.main.IntegradorTOTVS.Repositorys.ProveedorRepository;
+import com.main.IntegradorTOTVS.Repositorys.ClientesRepository;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class NatsListenerService {
     private final Connection connection;
     private final ProveedorRepository proveedorRepository;
+    private final ClientesRepository clientesRepository;
     private final ObjectMapper objectMapper;
 
 
@@ -30,9 +32,10 @@ public class NatsListenerService {
     private String empresa;
 
 
-    public NatsListenerService(Connection connection, ProveedorRepository proveedorRepository, ObjectMapper objectMapper) {
+    public NatsListenerService(Connection connection, ProveedorRepository proveedorRepository, ClientesRepository clientesRepository, ObjectMapper objectMapper) {
         this.connection = connection;
         this.proveedorRepository = proveedorRepository;
+        this.clientesRepository = clientesRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -48,6 +51,11 @@ public class NatsListenerService {
                         respuesta = proveedores.toString();
                         respuesta = objectMapper.writeValueAsString(proveedores);
                     }
+                    case "clientes.consultar" -> {
+                        List<Map<String, Object>> clientes = clientesRepository.buscarClientes(grupoEmpresa, empresa);
+                        respuesta = clientes.toString();
+                        respuesta = objectMapper.writeValueAsString(clientes);
+                    }
                     // Cuando agregues otros repositorios, reutilizas param1 y param2 aquí mismo:
                     // case "clientes.listar" -> respuesta = clienteRepository.listarClientes(param1, param2).toString();
                     default -> respuesta = "Subject no soportado";
@@ -62,6 +70,7 @@ public class NatsListenerService {
         });
 
         dispatcher.subscribe("proveedores.consultar");
+        dispatcher.subscribe("clientes.consultar");
     }
 
     // Método que faltaba para enviar solicitudes y esperar respuesta

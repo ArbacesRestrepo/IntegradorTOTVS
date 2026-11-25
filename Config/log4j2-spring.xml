@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ===================================================================== -->
+<!-- CONFIGURACIÓN INDUSTRIAL DE LOG4J2 - FUNERARIA SAN VICENTE            -->
+<!-- Forzamos bufferedIO="false" e immediateFlush="true" en hilos del pool -->
+<!-- ===================================================================== -->
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_DIR">./Registro</Property>
+        <Property name="LOG_NAME">InterfaseTOTVS</Property>
+        <Property name="LOG_WARN_NAME">InterfaseTOTVSWarn</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Property>
+        <Property name="LOG_WARN_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
+    </Properties> 
+
+    <Appenders>
+        <!-- 1. CONSOLA RECTIFICADA: Captura dinámica de stream en hilos Daemon con vaciado inmediato -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_WARN_PATTERN}" />
+        </Console>
+        
+        <!-- 2. ARCHIVO ROTATIVO RECTIFICADO: Desactivamos bufferedIO para obligar 
+             a la JVM a inyectar cada tag Focus en el disco al microsegundo -->
+        <RollingFile name="RollingFileAppender"
+                     fileName="${LOG_DIR}/${LOG_NAME}.log"
+                     filePattern="${LOG_DIR}/archived/${LOG_NAME}-%d{yyyy-MM-dd}-%i.log.gz"
+                     bufferedIO="false"
+                     immediateFlush="true"> 
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/> 
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies> 
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${LOG_DIR}/archived" maxDepth="1">
+                    <IfFileName glob="${LOG_NAME}-*.log.gz"/>
+                    <IfLastModified age="7d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- 3. ARCHIVO ROTATIVO RECTIFICADO PARA ERRORES O ADVERTENCIAS: Desactivamos bufferedIO para obligar 
+             a la JVM a inyectar cada tag Focus en el disco al microsegundo -->
+        <RollingFile name="RollingFileAppenderWarn"
+                     fileName="${LOG_DIR}/${LOG_WARN_NAME}.log"
+                     filePattern="${LOG_DIR}/archived/${LOG_WARN_NAME}-%d{yyyy-MM-dd}-%i.log.gz"
+                     bufferedIO="false"
+                     immediateFlush="true"> 
+            <PatternLayout pattern="${LOG_WARN_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/> 
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies> 
+            <DefaultRolloverStrategy max="10">
+                <Delete basePath="${LOG_DIR}/archived" maxDepth="1">
+                    <IfFileName glob="${LOG_NAME}-*.log.gz"/>
+                    <IfLastModified age="7d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+            <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!--<Logger name="com.InterfaseTOTVS" level="INFO" additivity="true" />-->
+        <Logger name="org.springframework.integration" level="WARN" additivity="true">
+            <AppenderRef ref="RollingFileAppenderWarn"/>
+        </Logger> />
+
+        <Logger name="com.InterfaseTOTVS" level="INFO" additivity="true">
+            <AppenderRef ref="RollingFileAppender"/>
+        </Logger>
+
+        <!-- El Root Logger es el único administrador real de los Appenders en la JVM -->
+        <Root level="WARN">
+            <AppenderRef ref="ConsoleAppender"/>
+            <!--<AppenderRef ref="RollingFileAppenderWarn"/>-->
+        </Root>
+    </Loggers>
+</Configuration>
